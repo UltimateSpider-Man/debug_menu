@@ -4,7 +4,13 @@
 
 ## Download
 
-Get the menu from [here](https://github.com/UltimateSpider-Man/usm-debug-menu/releases)
+Get the console developer from [here]((https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1))
+
+Get the debug menu from [here]((https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.1))
+
+
+#Note console developer is not present in this project 2 projects separated openusm and debug menu
+
 
 ## Requirements
 
@@ -13,8 +19,16 @@ Get the menu from [here](https://github.com/UltimateSpider-Man/usm-debug-menu/re
 
 ## Installation
 
-* Rename `binkw32.dll` in the game's folder to `binkw32_.dll`
-* Copy the `binkw32.dll` in the zip file to the game's folder
+
+## DLL version for debug menu
+
+* Download console.dll and debug_menu.dll then use CFF Exporer
+* Then open USM.exe with CFF Exporer go to import adder option
+* Load a dll for inject in this case open debug_menu.dll
+* Click Import by Ordinal or by Name and Rebuild Database
+* Then Save the USM.exe
+* enjoy
+ 
 
 ## Usage
 
