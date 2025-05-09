@@ -8,11 +8,18 @@ Get the console developer from [here](https://github.com/UltimateSpider-Man/debu
 
 Get the debug menu from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.1)
 
+Get the debug menu asi version from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.2)
+
 
 #Note console developer is not present in this project 2 projects separated openusm and debug menu
 
 
-## Requirements
+## Requirements DLL Version
+
+* Visual C++ 2015
+* CFF Explorer
+
+## Requirements ASI Version
 
 * Visual C++ 2015
 
@@ -28,7 +35,18 @@ Get the debug menu from [here](https://github.com/UltimateSpider-Man/debug_menu/
 * Click Import by Ordinal or by Name and Rebuild Database
 * Then Save the USM.exe
 * enjoy
- 
+
+## ASI version for debug menu
+
+* Download console.dll and debug_menu.asi
+* Put this 2 files on game directory
+* Enjoy
+
+ ## Switching Debug Menu to Console Developer 
+
+ * Open cmd.exe
+ * go to game folder on cmd
+ * and digit this command USM --console
 
 ## Usage
 
