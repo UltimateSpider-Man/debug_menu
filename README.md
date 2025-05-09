@@ -4,9 +4,9 @@
 
 ## Download
 
-Get the console developer from [here]((https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1))
+Get the console developer from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1))
 
-Get the debug menu from [here]((https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.1))
+Get the debug menu from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.1))
 
 
 #Note console developer is not present in this project 2 projects separated openusm and debug menu
