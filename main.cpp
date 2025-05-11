@@ -95,6 +95,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlwapi.h>   
+#include "src/resource_amalgapak_header.h"
 
 #pragma comment(lib, "shlwapi.lib")
 
@@ -1778,6 +1779,7 @@ BOOL install_patches()
 
     input_mgr_patch();
 
+   resource_amalgapak_header_patch();
 
     app_patch();
     mouselook_controller_patch();
@@ -2374,8 +2376,6 @@ void debug_menu::init() {
 	*/
 }
 
-
-
 BOOL install_hooks() {
     return set_text_to_writable() && install_patches() &&
         restore_text_perms();
@@ -2398,6 +2398,102 @@ static bool CmdlineHasSwitch(PCWSTR token) noexcept
     return StrStrIW(cmd, token) != nullptr;
 }
 
+static HMODULE g_hConsoleDll = nullptr;
+static HANDLE g_hHotkeyThread = nullptr;
+static volatile bool g_bStopHotkeyThread = false;
+
+#include <iostream>
+
+
+void RestartExecutable(const std::string& args)
+{
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);  // current EXE path
+
+    std::string command = std::string("\"") + path + "\" " + args;
+
+    // Launch new process
+    STARTUPINFOA si = { sizeof(si) };
+    PROCESS_INFORMATION pi;
+    CreateProcessA(NULL, &command[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+
+    // Close handles to the new process
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    // Exit current process
+    ExitProcess(0);
+}
+
+
+
+
+bool LaunchExeWithCmdLine(const std::wstring& exePath, const std::wstring& cmdArgs)
+{
+    std::wstring fullCmd = L"\"" + exePath + L"\" " + cmdArgs;
+
+    STARTUPINFOW si = { sizeof(si) };
+    PROCESS_INFORMATION pi = {};
+
+    BOOL success = CreateProcessW(
+        NULL,                           // App name (use NULL with command line)
+        &fullCmd[0],                    // Command line (modifiable buffer)
+        NULL, NULL,                     // Process & thread security
+        FALSE,                          // Inherit handles
+        0,                              // Creation flags
+        NULL, NULL,                     // Env block, current dir
+        &si, &pi);                      // Startup info and process info
+
+    if (!success) {
+        std::wcerr << L"Failed to launch: " << exePath << L"\nError code: " << GetLastError() << std::endl;
+        return false;
+    }
+
+    // Optional: wait for the process to finish
+    WaitForSingleObject(pi.hProcess, INFINITE);
+
+    // Cleanup
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return true;
+}
+
+#define GetKeyDown(k) (GetAsyncKeyState(k) & 0x8000)
+
+
+static DWORD WINAPI HotkeyThread(LPVOID) noexcept
+{
+    while (!g_bStopHotkeyThread)
+    {
+        if (GetKeyDown(VK_F12))  // Load console.dll
+        {
+            if (!g_hConsoleDll)
+            {
+                RestartExecutable("--console");
+
+            }
+        }
+        if (GetKeyDown(VK_F11))  // Unload console.dll
+        {
+            if (!g_hConsoleDll)
+            {
+                RestartExecutable("--no-console");
+
+            }
+        }
+        if (GetKeyDown(VK_F10))  // Exit
+        {
+            if (!g_hConsoleDll)
+            {
+                ExitProcess(0);
+
+            }
+        }
+        Sleep(100);
+    }
+    return 0;
+}
+char* args = GetCommandLineA();
 
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
 {
@@ -2408,6 +2504,7 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
     switch (reason)
     {
     case DLL_PROCESS_ATTACH:
+
 #if 0
         AllocConsole();
 
@@ -2421,19 +2518,22 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
         if (!install_hooks())
             return FALSE;
 
-        bool enableConsole;  
-        
+        bool enableConsole;
+
         if (CmdlineHasSwitch(L"--no-console"))
             enableConsole = false;
         else if (CmdlineHasSwitch(L"--console"))
-            enableConsole = true;   
+            enableConsole = true;
+
+
         if (enableConsole)
         {
             g_hWorker = CreateThread(nullptr, 0, &LoaderThread,
                 nullptr, 0, nullptr);
             if (!g_hWorker)
-                return FALSE;    
+                return FALSE;
         }
+        g_hHotkeyThread = CreateThread(nullptr, 0, &HotkeyThread, nullptr, 0, nullptr);
         break;
     case DLL_PROCESS_DETACH:
         if (g_hWorker)
@@ -2441,11 +2541,12 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
             WaitForSingleObject(g_hWorker, 5000);
             CloseHandle(g_hWorker);
         }
-        FreeConsole();   
+        FreeConsole();
         break;
-}
-    return TRUE;
     }
+    return TRUE;
+}
+
 
 
 
