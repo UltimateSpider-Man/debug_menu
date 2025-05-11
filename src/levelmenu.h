@@ -118,6 +118,33 @@ inline level_descriptor_t* get_hero_list_updator(int* hero)
     return v11;
 }
 
+inline void RebbotGame(const std::string& args)
+{
+
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);  // current EXE path
+
+    std::string command = std::string("\"") + path + "\" " + args;
+
+    // Launch new process
+    STARTUPINFOA si = { sizeof(si) };
+    PROCESS_INFORMATION pi;
+    CreateProcessA(NULL, &command[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+
+    // Close handles to the new process
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    // Exit current process
+    ExitProcess(0);
+}
+
+
+
+
+
+
+
 inline void level_select_handler(debug_menu_entry *entry)
 {
     auto *v1 = entry->text;
@@ -137,12 +164,14 @@ inline void level_select_handler(debug_menu_entry *entry)
         }
     }
 
-    g_game_ptr()->load_new_level(v15, -1);
+    g_game_ptr()->LoadLevel("config.ini");
+
 }
 
 
 inline void reboot_handler(debug_menu_entry *a1)
 {
+     RebbotGame("--no - console");
 }
 
 inline void handle_hero_select_menu(debug_menu_entry *entry, custom_key_type)
@@ -248,7 +277,7 @@ inline void hero_entry_callback(debug_menu_entry* entry)
             assert(hero_selected > -1 && hero_selected < NUM_HEROES);
 
             [[maybe_unused]] auto v2 = g_world_ptr()->add_player(mString { hero_list[hero_selected] });
-
+            Sleep(1000);
 
             auto v10 = v2 <= v18;
 

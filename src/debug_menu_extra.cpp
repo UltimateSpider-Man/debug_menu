@@ -1048,6 +1048,10 @@ std::string camera_render_callback(debug_menu_entry* a2)
 }
 
 
+#pragma comment(lib, "winmm.lib")
+
+
+
 
 
 void game_flags_handler(debug_menu_entry* a1)
@@ -1073,48 +1077,19 @@ void game_flags_handler(debug_menu_entry* a1)
         break;
     }
     case SLOW_MOTION: {
-        static int originalFrameRate = 0;
-        static bool slowMotionActive = false;
-        static int currentFrameRate = 0;
-
-        if (a1->get_bval()) {
-            if (!slowMotionActive) {
-                originalFrameRate = os_developer_options::instance()->get_int(mString{ "FRAME_LOCK" });
-                slowMotionActive = true;
-            }
-
-            if (currentFrameRate > 10) {
-                currentFrameRate -= 5; // Gradually slow down
-                os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, currentFrameRate);
-            }
+        static int old_frame_lock = 0;
+        int v27;
+        if (a1->get_bval())
+        {
+            old_frame_lock = os_developer_options::instance()->get_int(mString{ "FRAME_LOCK" });
+            v27 = 120;
         }
-        else {
-            if (slowMotionActive) {
-                if (currentFrameRate < originalFrameRate) {
-                    currentFrameRate += 5; // Gradually speed up
-                    os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, currentFrameRate);
-                }
-                else {
-                    slowMotionActive = false;
-                }
-            }
+        else
+        {
+            v27 = old_frame_lock;
         }
-        static int originalFrameRate2 = 0;
-        static bool slowMotionActive2 = false;
-
-        if (a1->get_bval()) {
-            if (!slowMotionActive2) {
-                originalFrameRate2 = os_developer_options::instance()->get_int(mString{ "FRAME_LOCK" });
-                os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, 10); // Change this value to control the slowdown amount
-                slowMotionActive2 = true;
-            }
-        }
-        else {
-            if (slowMotionActive2) {
-                os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, originalFrameRate2);
-                slowMotionActive2 = false;
-            }
-        }
+        os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" },v27);
+        debug_menu::hide();
         break;
     }
     case MONKEY_ENABLED: // Monkey Enabled
