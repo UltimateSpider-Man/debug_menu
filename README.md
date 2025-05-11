@@ -6,7 +6,7 @@
 
 Get the console developer from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1)
 
-Get the debug menu from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.1)
+Get the debug menu from [here](https://github.com/UltimateSpider-Man/debug_menu/releases)
 
 Get the debug menu asi version from [here](https://github.com/UltimateSpider-Man/debug_menu/releases/tag/v1.2)
 
