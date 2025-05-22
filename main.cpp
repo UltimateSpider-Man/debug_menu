@@ -18,19 +18,13 @@
 #pragma comment(lib, "Dinput8.lib")
 #pragma comment(lib, "Dxguid.lib")
 
-
-#include "src/movie_manager.h"
-#include "src/frontendmenusystem.h"
-#include "src/main_menu_keyboard.h"
-#include "src/pausemenusystem.h"
-#include "src/rtdt_replay_mgr.h"
-
-#include "src/app.h"
-
-#include "src/limited_timer.h"
-
-#include "src/pause_menu_root.h"
 #include "src/base_ai_debug.h"
+
+#include "src/conglom.h"
+
+#include "src/ini_parser.h"
+
+#include "src/variant_interface.h"
 #include "src/debug_menu_extra.h"
 #include "src/devopt.h"
 #include "src/debug_menu.h"
@@ -41,7 +35,7 @@
 #include "src/forwards.h"
 #include "src/func_wrapper.h"
 #include "src/fixedstring32.h"
-#include "src/camera.h"
+#include "src/input_mgr.h"
 #include "src/levelmenu.h"
 #include "src/memory_menu.h"
 #include "src/message_board.h"
@@ -62,9 +56,9 @@
 #include "src/vm_executable.h"
 #include "src/variable.h"
 #include "src/wds.h"
-#include "src/app.h"
 
-#include "src/console.h"
+
+
 
 
 #include <ctime>
@@ -95,7 +89,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlwapi.h>   
-#include "src/resource_amalgapak_header.h"
+
 
 #pragma comment(lib, "shlwapi.lib")
 
@@ -1015,7 +1009,7 @@ void populate_missions_menu(debug_menu_entry* entry)
         resource_manager::reload_amalgapak();
     }
 
-    auto* head_menu = create_menu2(entry->get_name(), debug_menu::sort_mode_t::ascending);
+    auto* head_menu = create_menu("", debug_menu::sort_mode_t::ascending);
     entry->set_submenu(head_menu);
 
     auto* mission_unload_entry = create_menu_entry(mString{ "UNLOAD CURRENT MISSION" });
@@ -1064,7 +1058,7 @@ void populate_missions_menu(debug_menu_entry* entry)
             auto v50 = menu_missions.size();
             const auto v19 = mString{ "pk_" } + info.field_0;
             auto* v11 = v19.c_str();
-            auto key = create_resource_key_from_path(v11, RESOURCE_KEY_TYPE_PACK);
+            auto key = create_resource_key_from_path(v11, 25);
             if (resource_manager::get_pack_file_stats(key, nullptr, nullptr, nullptr))
             {
                 mission_t mission{};
@@ -1278,56 +1272,46 @@ void menu_setup(int game_state, int keyboard) {
         }
 	}
 }
-
-void menu_input_handler(int keyboard, int SCROLL_SPEED) {
+void menu_input_handler(int keyboard, int SCROLL_SPEED)
+{
     if (is_menu_key_clicked(MENU_DOWN, keyboard)) {
 
         int key_val = get_menu_key_value(MENU_DOWN, keyboard);
         if (key_val == 1) {
             menu_go_down();
-        }
-        else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
+        } else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
             menu_go_down();
         }
-    }
-    else if (is_menu_key_clicked(MENU_UP, keyboard)) {
+    } else if (is_menu_key_clicked(MENU_UP, keyboard)) {
 
         int key_val = get_menu_key_value(MENU_UP, keyboard);
         if (key_val == 1) {
             menu_go_up();
-        }
-        else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
+        } else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
             menu_go_up();
         }
-    }
-    else if (is_menu_key_pressed(MENU_ACCEPT, keyboard))
-    {
+    } else if (is_menu_key_pressed(MENU_ACCEPT, keyboard)) {
         auto* entry = &current_menu->entries[current_menu->window_start + current_menu->cur_index];
         assert(entry != nullptr);
         entry->on_select(1.0);
 
-        //current_menu->handler(entry, ENTER);
-    }
-    else if (is_menu_key_pressed(MENU_BACK, keyboard)) {
+        // current_menu->handler(entry, ENTER);
+    } else if (is_menu_key_pressed(MENU_BACK, keyboard)) {
         current_menu->go_back();
-    }
-    else if (is_menu_key_clicked(MENU_LEFT, keyboard)) { // Use is_menu_key_clicked here
+    } else if (is_menu_key_clicked(MENU_LEFT, keyboard)) { // Use is_menu_key_clicked here
         debug_menu_entry* cur = &current_menu->entries[current_menu->window_start + current_menu->cur_index];
         int key_val = get_menu_key_value(MENU_LEFT, keyboard);
         if (key_val == 1) {
             cur->on_change(-1.0, false);
-        }
-        else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
+        } else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
             cur->on_change(-1.0, false);
         }
-    }
-    else if (is_menu_key_clicked(MENU_RIGHT, keyboard)) { // Use is_menu_key_clicked here
+    } else if (is_menu_key_clicked(MENU_RIGHT, keyboard)) { // Use is_menu_key_clicked here
         debug_menu_entry* cur = &current_menu->entries[current_menu->window_start + current_menu->cur_index];
         int key_val = get_menu_key_value(MENU_RIGHT, keyboard);
         if (key_val == 1) {
             cur->on_change(1.0, true);
-        }
-        else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
+        } else if ((key_val >= SCROLL_SPEED) && (key_val % SCROLL_SPEED == 0)) {
             cur->on_change(1.0, true);
         }
     }
@@ -1337,215 +1321,44 @@ void menu_input_handler(int keyboard, int SCROLL_SPEED) {
     highlighted->frame_advance_callback(highlighted);
 }
 
+HRESULT __stdcall GetDeviceStateHook(IDirectInputDevice8* self, DWORD cbData, LPVOID lpvData)
+{
 
+    HRESULT res = GetDeviceStateOriginal(self, cbData, lpvData);
 
+    // printf("cbData %d %d %d\n", cbData, sizeof(DIJOYSTATE), sizeof(DIJOYSTATE2));
 
+    // keyboard time babyyy
+    if (cbData == 256 || cbData == sizeof(DIJOYSTATE2)) {
 
+        if (cbData == 256)
+            GetDeviceStateHandleKeyboardInput(lpvData);
+        else if (cbData == sizeof(DIJOYSTATE2))
+            GetDeviceStateHandleControllerInput(lpvData);
 
-
-
-
-
-
-
-
-HRESULT __stdcall GetDeviceStateHook(IDirectInputDevice8* self, DWORD cbData, LPVOID lpvData) {
-
-	HRESULT res = GetDeviceStateOriginal(self, cbData, lpvData);
-
-	//printf("cbData %d %d %d\n", cbData, sizeof(DIJOYSTATE), sizeof(DIJOYSTATE2));
-
-
-	
-	//keyboard time babyyy
-	if (cbData == 256 || cbData == sizeof(DIJOYSTATE2)) {
-
-		
-		if (cbData == 256)
-			GetDeviceStateHandleKeyboardInput(lpvData);
-		else if (cbData == sizeof(DIJOYSTATE2))
-			GetDeviceStateHandleControllerInput(lpvData);
-
-		int game_states = 0;
-		if (g_game_ptr())
-        {
-			game_states = game_get_cur_state(g_game_ptr());
+        int game_state = 0;
+        if (g_game_ptr()) {
+            game_state = game_get_cur_state(g_game_ptr());
         }
 
+        // printf("INSERT %d %d %c\n", keys[DIK_INSERT], game_state, debug_enabled ? 'y' : 'n');
 
-
-		//printf("INSERT %d %d %c\n", keys[DIK_INSERT], game_state, debug_enabled ? 'y' : 'n');
-
-		int keyboard = cbData == 256;
-
-		menu_setup(game_states, keyboard);
+        int keyboard = cbData == 256;
+        menu_setup(game_state, keyboard);
 
         if (debug_enabled) {
             menu_input_handler(keyboard, 5);
         }
+    }
 
-        auto g_state = []() -> game_state {
-            if (g_game_ptr() != nullptr)
-            {
-                return g_game_ptr()->get_cur_state();
-            }
+    if (debug_enabled) {
+        memset(lpvData, 0, cbData);
+    }
 
-            return static_cast<game_state>(0);
-            }();
+    // printf("Device State called %08X %d\n", this, cbData);
 
-        if (g_state != game_state::RUNNING && g_console == nullptr)
-        {
-            return res;
-        }
-
-        static constexpr struct {
-            int key;
-            char sym;
-        } char_keys[] = { {DIK_A, 'a'}, {DIK_B, 'b'}, {DIK_C, 'c'}, {DIK_D, 'd'}, {DIK_E, 'e'}, {DIK_F, 'f'},
-                         {DIK_G, 'g'}, {DIK_H, 'h'}, {DIK_I, 'i'}, {DIK_J, 'j'}, {DIK_K, 'k'}, {DIK_L, 'l'},
-                         {DIK_M, 'm'}, {DIK_N, 'n'}, {DIK_O, 'o'}, {DIK_P, 'p'}, {DIK_Q, 'q'}, {DIK_R, 'r'},
-                         {DIK_S, 's'}, {DIK_T, 't'}, {DIK_U, 'u'}, {DIK_V, 'v'}, {DIK_W, 'w'}, {DIK_X, 'x'},
-                         {DIK_Y, 'y'}, {DIK_Z, 'z'} };
-
-        static constexpr struct {
-            int key;
-            char sym;
-        } num_keys[] = { {DIK_1, '1'},
-                        {DIK_2, '2'},
-                        {DIK_3, '3'},
-                        {DIK_4, '4'},
-                        {DIK_5, '5'},
-                        {DIK_6, '6'},
-                        {DIK_7, '7'},
-                        {DIK_8, '8'},
-                        {DIK_9, '9'},
-                        {DIK_0, '0'} };
-
-        auto key_is_pressed = [](int i) -> bool {
-            auto res = (keys[i] == 2);
-            if (res) keys[i] = 0;
-
-            return res;
-            };
-
-        auto char_key_is_pressed = []() -> char {
-            for (auto& k : char_keys) {
-                if (keys[k.key] == 2) {
-                    keys[k.key] = 0;
-                    return k.sym;
-                }
-            }
-
-            return 0;
-            };
-
-        auto num_key_is_pressed = []() -> char {
-            for (auto& k : num_keys) {
-                if (keys[k.key] == 2) {
-                    keys[k.key] = 0;
-                    return k.sym;
-                }
-            }
-
-            return 0;
-            };
-
-        if (key_is_pressed(DIK_GRAVE)) {
-            _kbevcb(KeyEvent::Press, KB_TILDE);
-        }
-
-        if (g_console == nullptr) {
-            return res;
-        }
-
-        if (g_console->isVisible())
-        {
-            if (key_is_pressed(DIK_TAB))
-            {
-                _kbevcb(KeyEvent::Press, KB_TAB);
-            }
-            else if (key_is_pressed(DIK_RETURN)) {
-                _kbevcb(KeyEvent::Press, KB_RETURN);
-            }
-            else if (key_is_pressed(DIK_HOME)) {
-                _kbevcb(KeyEvent::Press, KB_HOME);
-            }
-            else if (key_is_pressed(DIK_END)) {
-                _kbevcb(KeyEvent::Press, KB_END);
-            }
-            else if (key_is_pressed(DIK_PGUP)) {
-                _kbevcb(KeyEvent::Press, KB_PAGEUP);
-            }
-            else if (key_is_pressed(DIK_PGDN)) {
-                _kbevcb(KeyEvent::Press, KB_PAGEDOWN);
-            }
-            else if (key_is_pressed(DIK_UP)) {
-                _kbevcb(KeyEvent::Press, KB_UP);
-            }
-            else if (key_is_pressed(DIK_DOWN)) {
-                _kbevcb(KeyEvent::Press, KB_DOWN);
-            }
-            else if (key_is_pressed(DIK_BACKSPACE))
-            {
-                _kbevcb(KeyEvent::Press, KB_BACKSPACE);
-            }
-            else if (key_is_pressed(DIK_MINUS)) {
-                _kbchcb('_');
-            }
-            else if (key_is_pressed(DIK_SPACE)) {
-                _kbchcb(' ');
-            }
-            else if (char ch = char_key_is_pressed(); ch != 0)
-            {
-                if (GetKeyState(VK_SHIFT) & 0x8000) {
-                    _kbchcb(toupper(ch));
-                }
-                else {
-                    _kbchcb(ch);
-                }
-            }
-            else if (char ch = num_key_is_pressed(); ch != 0)
-            {
-                if ((GetKeyState(VK_SHIFT) & 0x8000))
-                {
-                    if (ch == '9')
-                    {
-                        _kbchcb('(');
-                    }
-                    else if (ch == '0')
-                    {
-                        _kbchcb(')');
-                    }
-                }
-                else
-                {
-                    _kbchcb(ch);
-                }
-
-            }
-        }
-
-
-
-        if (g_console->isVisible()) {
-            memset(lpvData, 0, cbData);
-        }
-
-        //printf("Device State called %08X %d\n", this, cbData);
-
-
-
-
-	}
-
-
-
-        // printf("Device State called %08X %d\n", this, cbData);
-
-        return res;
-
+    return res;
 }
-
 typedef HRESULT(__stdcall* GetDeviceData_ptr)(IDirectInputDevice8*, DWORD, LPDIDEVICEOBJECTDATA, LPDWORD, DWORD);
 GetDeviceData_ptr GetDeviceDataOriginal = nullptr;
 
@@ -1759,7 +1572,6 @@ BOOL install_patches()
 
     REDIRECT(0x005E10EE, init_shadow_targets);
 
-    console_patch();
 
           {
               DWORD hookDirectInputAddress = (DWORD)HookDirectInput8Create;
@@ -1779,9 +1591,8 @@ BOOL install_patches()
 
     input_mgr_patch();
 
-   resource_amalgapak_header_patch();
+   //resource_amalgapak_header_patch();
 
-    app_patch();
     mouselook_controller_patch();
 
    spider_monkey_patch();
@@ -1790,21 +1601,17 @@ BOOL install_patches()
     
     wds_patch();
 
-   // PauseMenuSystem_patch();
 
-    //   camera_patch();
 
     ngl_patch();
 
     game_patch();
 
-  FrontEndMenuSystem_patch();
+  //FrontEndMenuSystem_patch();
 
 
-   main_menu_keyboard_patch();
 
 
-    pause_menu_root_patch();
 
 
 
@@ -1948,18 +1755,9 @@ void handle_devopt_entry(debug_menu_entry* entry, custom_key_type key_type)
 
 
 
-    MMRESULT timeBeginPeriod2(UINT uPeriod)
-{
-    return 1;
-}
-
-DWORD timeGetTime2() 
-{
-    return 0.001;
-}
 
 
-mString& g_debug_mem_dump_frame = var<mString>(0x00937744);
+
 
 void create_devopt_menu(debug_menu* parent)
 {
@@ -2348,7 +2146,7 @@ void debug_menu::init() {
     add_debug_menu_entry(root_menu, &game_entry);
 	create_missions_menu(root_menu);
     create_debug_render_menu(root_menu);
-    create_district_variants_menu(root_menu);
+    create_debug_district_variants_menu(root_menu);
     create_replay_menu(root_menu);
     create_ai_root_menu(root_menu);
     create_memory_menu(root_menu);
@@ -2471,6 +2269,8 @@ static DWORD WINAPI HotkeyThread(LPVOID) noexcept
             {
                 RestartExecutable("--console");
 
+
+
             }
         }
         if (GetKeyDown(VK_F11))  // Unload console.dll
@@ -2524,6 +2324,8 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
             enableConsole = false;
         else if (CmdlineHasSwitch(L"--console"))
             enableConsole = true;
+
+
 
 
         if (enableConsole)
