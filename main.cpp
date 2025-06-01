@@ -20,9 +20,7 @@
 
 #include "src/base_ai_debug.h"
 
-#include "src/conglom.h"
 
-#include "src/ini_parser.h"
 
 #include "src/variant_interface.h"
 #include "src/debug_menu_extra.h"
@@ -35,7 +33,6 @@
 #include "src/forwards.h"
 #include "src/func_wrapper.h"
 #include "src/fixedstring32.h"
-#include "src/input_mgr.h"
 #include "src/levelmenu.h"
 #include "src/memory_menu.h"
 #include "src/message_board.h"
@@ -89,6 +86,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlwapi.h>   
+
 
 
 #pragma comment(lib, "shlwapi.lib")
@@ -641,6 +639,26 @@ uint8_t __fastcall slf__create_progression_menu_entry(script_library_class::func
 	return true;
 }
 
+void script_list_entry(debug_menu* parent,vm_stack* stack)
+{
+
+	script_instance* instance
+    = stack->thread->inst;
+printf("Total funcs: %d\n", instance->m_parent->total_funcs);
+
+auto* abort_mission_entry = create_menu_entry(mString { "ABORT MISSION" });
+const mString v1 { "progression_mission_aborted()" };
+abort_mission_entry->set_script_handler(instance, { v1 });
+
+script_menu->add_entry(abort_mission_entry);
+
+auto* start_ambient_music_entry = create_menu_entry(mString { "START AMBIENT MUSIC" });
+const mString v2 { "ambient_music_start()" };
+start_ambient_music_entry->set_script_handler(instance, { v2 });
+
+script_menu->add_entry(start_ambient_music_entry);
+
+}
 
 
 bool __fastcall slf__create_debug_menu_entry(script_library_class::function *func, void *, vm_stack* stack, void* unk)
@@ -650,30 +668,19 @@ bool __fastcall slf__create_debug_menu_entry(script_library_class::function *fun
     auto *stack_ptr = bit_cast<char *>(stack->stack_ptr);
     sub_65BB36(func, stack, stack_ptr, 1);
 	char** strs = bit_cast<char **>(stack->stack_ptr);
-
+    script_list_entry(debug_menu::root_menu, stack);
 	//printf("Entry: %s ", strs[0]);
 
 	debug_menu_entry entry {};
 	entry.entry_type = UNDEFINED;
 	strcpy(entry.text, strs[0]);
+    
 
     printf("entry.text = %s\n", entry.text);
 
 	script_instance *instance = stack->thread->inst;
     printf("Total funcs: %d\n", instance->m_parent->total_funcs);
 
-    auto* abort_mission_entry = create_menu_entry(mString{ "ABORT MISSION" });
-    const  mString v1{ "progression_mission_aborted()" };
-    abort_mission_entry->set_script_handler(instance, { v1 });
-
-    script_menu->add_entry(abort_mission_entry);
-
-    auto* start_ambient_music_entry = create_menu_entry(mString{ "START AMBIENT MUSIC" });
-    const  mString v2{ "ambient_music_start()" };
-    start_ambient_music_entry->set_script_handler(instance, { v2 });
-
-
-    script_menu->add_entry(start_ambient_music_entry);
 
 
 	void *res = add_debug_menu_entry(script_menu, &entry);
@@ -1091,6 +1098,7 @@ void populate_missions_menu(debug_menu_entry* entry)
         }
     }
 }
+
 
 
 
@@ -1588,7 +1596,6 @@ BOOL install_patches()
 
           printf("Redirects have been installed2\n");
 
-
     input_mgr_patch();
 
    //resource_amalgapak_header_patch();
@@ -1764,6 +1771,10 @@ void create_devopt_menu(debug_menu* parent)
     assert(parent != nullptr);
 
     auto* v22 = create_menu("Devopts", handle_game_entry, 300);
+    debug_menu_entry v1;
+    debug_menu_entry* block3 = v1.alloc_block(v22, 4);
+    block3[0] = debug_menu_entry { v22 };
+
 
     for (auto idx = 0u; idx < NUM_OPTIONS; ++idx) {
         auto* v21 = get_option(idx);
@@ -2109,7 +2120,6 @@ void create_script_menu(debug_menu* script_menu)
 
 
 
-
 void debug_menu::init() {
 
 	root_menu = create_menu("Debug Menu", handle_debug_entry, 10);
@@ -2154,6 +2164,7 @@ void debug_menu::init() {
     create_entity_animation_menu(root_menu);
     add_debug_menu_entry(root_menu, &level_select_entry);
     add_debug_menu_entry(root_menu, &script_entry);
+
     add_debug_menu_entry(root_menu, &progression_entry);
    // create_movie_play_menu(script_menu);
     create_script_menu(script_menu);
@@ -2179,13 +2190,37 @@ BOOL install_hooks() {
         restore_text_perms();
 }
 
+// ---------------------------------------------------------------------------
+// 1) Put this near your other globals
+// ---------------------------------------------------------------------------
+static const wchar_t* kDllList[] = {
+    L"console.dll",
+    L"1.dll", // add as many names as you like
+    nullptr // <-- terminator
+};
+
+static std::vector<HMODULE> g_loadedDlls; // handles we own (for later FreeLibrary)
 
 
 static DWORD WINAPI LoaderThread(LPVOID) noexcept
 {
-    HMODULE h = LoadLibraryW(L"console.dll");
-    if (!h)
-        OutputDebugStringW(L"[loader] console.dll failed to load\n");
+    for (const wchar_t** p = kDllList; *p; ++p) {
+        // Skip if it is already loaded in this process
+        if (GetModuleHandleW(*p))
+            continue;
+
+        HMODULE h = LoadLibraryW(*p);
+        if (!h) {
+            wchar_t buf[256];
+            swprintf_s(buf, L"[loader] %s failed (err=%lu)\n", *p, GetLastError());
+            OutputDebugStringW(buf);
+            // OPTIONAL: bail out entirely if *any* DLL fails
+            return 0;
+        }
+        g_loadedDlls.push_back(h);
+    }
+
+    OutputDebugStringW(L"[loader] all helper DLLs loaded\n");
     return 0;
 }
 
@@ -2336,6 +2371,8 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
                 return FALSE;
         }
         g_hHotkeyThread = CreateThread(nullptr, 0, &HotkeyThread, nullptr, 0, nullptr);
+        for (HMODULE h : g_loadedDlls)
+            FreeLibrary(h);
         break;
     case DLL_PROCESS_DETACH:
         if (g_hWorker)
@@ -2343,6 +2380,11 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
             WaitForSingleObject(g_hWorker, 5000);
             CloseHandle(g_hWorker);
         }
+        if (g_hWorker) {
+            
+        }
+        FreeConsole();
+        g_loadedDlls.clear();
         FreeConsole();
         break;
     }
