@@ -5,7 +5,6 @@
 
 #include "fetext.h"
 
-
 struct nglFont;
 struct IGOFrontEnd;
 struct PauseMenuSystem;

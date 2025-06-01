@@ -20,18 +20,15 @@ struct fixed_vector;
 
 struct entity : signaller 
 {
+    static constexpr inline auto FIXED_REGIONS_ARRAY_SIZE = 2;
 
-
-        static constexpr inline auto FIXED_REGIONS_ARRAY_SIZE = 2;
-
-    region* regions[FIXED_REGIONS_ARRAY_SIZE];
-    fixed_vector<region*, 7>* extended_regions;
-    collision_geometry* colgeom;
-    time_interface* field_58;
+    region *regions[FIXED_REGIONS_ARRAY_SIZE];
+    fixed_vector<region *, 7> *extended_regions;
+    collision_geometry *colgeom;
+    time_interface *field_58;
     int field_5C;
     int field_60;
     int field_64;
-
 
     void suspend(bool a1) {
         auto &func = get_vfunc(m_vtbl, 0x1B8);
@@ -74,11 +71,6 @@ struct entity : signaller
         return CDECL_CALL(0x004D67D0, a1);
     }
 
-        static inline Var<int> visit_key = (0x0095A6E4);
-    
-    static inline Var<int> visit_key2 = (0x0095A6E8);
-
-    static inline Var<int> visit_key3 = (0x0095A6EC);
     static inline Var<_std::list<entity *> *> found_entities {0x0095A6E0};
 };
 

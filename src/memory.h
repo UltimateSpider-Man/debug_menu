@@ -26,18 +26,18 @@ inline void *arch_memalign(size_t Alignment, size_t Size) {
     }
 }
 
-inline void* mem_alloc(size_t size)
-{
-
-    return (void*)CDECL_CALL(0x43a1000, size);
-}
-
 inline void *arch_malloc(size_t Size) {
     return (void *) CDECL_CALL(0x00535780, Size);
 }
 
 inline void *mem_freealign(void *Memory) {
     return (void *) CDECL_CALL(0x0058EC80, Memory);
+}
+
+inline void* mem_alloc(size_t size)
+{
+
+    return (void*)CDECL_CALL(0x43a1000, size);
 }
 
 inline void mem_print_stats(const char *a1) {

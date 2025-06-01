@@ -40,6 +40,8 @@ inline uint8_t*& resource_buffer = var<uint8_t*>(0x0095C738);
 
 inline bool& using_amalga = var<bool>(0x0095C800);
 
+
+
 inline int& amalgapak_signature = var<int>(0x0095C804);
 
 //   resource_memory_map*& memory_maps = var<resource_memory_map*>(0x0095C2F0);

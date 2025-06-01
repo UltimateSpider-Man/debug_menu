@@ -15,6 +15,8 @@ enum resource_partition_enum {
     RESOURCE_PARTITION_END = 8,
 };
 
+
+
 struct resource_partition {
     int field_0;
     int field_4;

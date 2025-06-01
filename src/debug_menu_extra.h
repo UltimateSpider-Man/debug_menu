@@ -19,5 +19,4 @@ extern void create_entity_variants_menu(debug_menu* parent);
 
 
 extern void create_replay_menu(debug_menu* parent);
-
 extern void create_dvars_menu(debug_menu* parent);

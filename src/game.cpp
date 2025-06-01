@@ -5,7 +5,7 @@
 #include "message_board.h"
 
 VALIDATE_OFFSET(game, gamefile, 0xC0);
-VALIDATE_OFFSET(game, field_172, 0x172);
+VALIDATE_OFFSET(game, m_user_camera_enabled, 0x172);
 VALIDATE_OFFSET(game, field_280, 0x280);
 
 mString sub_55DD80(const vector3d &a2)
