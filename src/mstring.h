@@ -9,7 +9,7 @@ struct mString
 {
     int field_0;
     int m_size;
-    const char *guts;
+    const char* guts;
     int field_C;
 
     mString()
@@ -82,8 +82,11 @@ struct mString
 
     const char *c_str() const
     {
+
         return guts;
     }
+
+
 
     void append(const char *from_string, size_t Count)
     {

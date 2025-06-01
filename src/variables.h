@@ -40,7 +40,6 @@ inline Var<char* [14]> dword_965C24 { 0x00965C24 };
 
 inline Var<char[1024]> g_scene_name = (0x0095C308);
 
-inline Var<const char*[1024]> scene_name = (0x0095C308);
 
 inline Var<bool> bExit { 0x0095C178 };
 

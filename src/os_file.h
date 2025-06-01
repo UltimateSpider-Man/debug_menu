@@ -1,10 +1,10 @@
 #pragma once
 
 #include "mstring.h"
+#include "utility.h"
 
-#include <fstream>
-
-static_assert(sizeof(HANDLE) == sizeof(std::ifstream *));
+#include <cstdint>
+#include <windows.h>
 
 struct os_file {
     enum mode_flags
@@ -22,7 +22,6 @@ struct os_file {
     };
 
     mString m_path;
-    mString field_0;
     uint32_t flags;
     bool opened;
     bool field_15;
@@ -36,70 +35,17 @@ struct os_file {
     uint32_t field_2C;
     uint32_t field_30;
 
-    //0x0058DEA0
-    inline      os_file() {
-        CDECL_CALL(0x0058DEA0);
-    }
-
     //0x0059EAA0
-    inline    explicit os_file(const mString &a2, int dwShareMode) {
-        CDECL_CALL(0x0059EAA0,a2, dwShareMode);
+    explicit os_file(const mString &a2, int dwShareMode)
+    {
+        void (__fastcall *func)(void *, void *, const mString *, int) = CAST(func, 0x0059EAA0);
+        func(this, nullptr, &a2, dwShareMode);
     }
 
-    //0x0059B6F0
-    ~os_file() {
-        CDECL_CALL(0x0059B6F0);
+    int write(const void *lpBuffer, int nNumberOfBytesToWrite)
+    {
+        int (__fastcall *func)(void *, void *, const void *, int) = CAST(func, 0x00598C30);
+        return func(this, nullptr, lpBuffer, nNumberOfBytesToWrite);
     }
 
-    bool is_open() const {
-        return this->opened;
-    }
-
-    inline    void sub_58DEF0() {
-        CDECL_CALL(0x0058DEF0);
-    }
-
-    inline     size_t sub_58DF50() {
-        CDECL_CALL(0x0058DF50);
-    }
-
-    //0x0058DF90
-    inline     int get_size() {
-        return (int) CDECL_CALL(0x0058DF90);
-    }
-
-    //0x0059B740
-    inline    void open(const mString &path, int shareMode) {
-        CDECL_CALL(0x0059B740, path, shareMode);
-    }
-
- //0x00598C30
-    inline    int write(const void *lpBuffer, int nNumberOfBytesToWrite) {
-      return (int)  CDECL_CALL(0x00598C30, lpBuffer, nNumberOfBytesToWrite);
-    }
-
-    //0x00598AD0
-inline    int read(LPVOID data, int bytes) {
-   return (int) CDECL_CALL(0x00598AD0,data, bytes);
-}
-
-    //0x0058E020
- inline   void set_fp(uint32_t lDistanceToMove, filepos_t a3) {
-     CDECL_CALL(0x0058E020, lDistanceToMove, a3);
- }
-
-    //0x00598A60
- inline   void close() {
-     CDECL_CALL(0x00598A60);
- }
-
-   static Var<bool> system_locked;
 };
-
-//0x00519F40
-extern void add_str(char *Dest, const char *Source, size_t a3);
-
-//0x00519F10
-extern void copy_str(char *Dest, const char *Source, size_t Count);
-
-extern void os_file_patch();

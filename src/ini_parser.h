@@ -227,7 +227,7 @@ inline void parse(const char* ini_filename, os_developer_options* a2)
                             num_names = 14;
                             break;
                         case 4:
-                            names = scene_name();
+                            names = g_scene_names();
                             num_names = 1024;
                             break;
                         default:

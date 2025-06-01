@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "common.h"
 #include "game.h"
@@ -19,20 +19,27 @@
 
 #include <cassert>
 
-constexpr auto NUM_HEROES = 10u;
+constexpr auto NUM_HEROES = 17u;
 
-const char *hero_list[NUM_HEROES] = {
-		"ultimate_spiderman",
-		"arachno_man_costume",
-		"usm_wrestling_costume",
-		"usm_blacksuit_costume",
-		"peter_parker",
-		"peter_parker_costume",
-		"peter_hooded",
-		"peter_hooded_costume",
-		"venom",
-		"venom_spider"
-	};
+inline const char* hero_list[NUM_HEROES] = {
+    "ultimate_spiderman",
+    "venom",
+    "peter_parker",
+    "peter_hooded",
+    "venom_spider",
+    "carnage",
+    "rhino",
+    "green_goblin",
+    "army_mary_jane",
+    "venarge",
+    "electro_suit",
+    "electro_nosuit",
+    "wolverine",
+    "beetle",
+    "shocker",
+    "silver_sable",
+    "johnny_storm",
+};
 
 enum class hero_status_e {
     UNDEFINED = 0,
@@ -86,7 +93,32 @@ level_descriptor_t *get_level_descriptors(int *arg0)
     return v11;
 }
 
-void level_select_handler(debug_menu_entry *entry)
+
+
+
+void reboot_process()
+{
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH); // current EXE path
+    const std::string& args = "";
+    std::string command = std::string("\"") + path + "\" " + args;
+
+    // Launch new process
+    STARTUPINFOA si = { sizeof(si) };
+    PROCESS_INFORMATION pi;
+    CreateProcessA(NULL, &command[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+
+    // Close handles to the new process
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
+    // Exit current process
+    ExitProcess(0);
+}
+
+
+
+void characterb_handler(debug_menu_entry *entry)
 {
     auto *v1 = entry->text;
     mString v15 {v1};
@@ -104,13 +136,35 @@ void level_select_handler(debug_menu_entry *entry)
             break;
         }
     }
+    g_game_ptr()->swap_level();
 
-    g_game_ptr()->load_new_level(v15, -1);
-}
+    }
+
+void city_handler(debug_menu_entry* entry)
+    {
+        auto* v1 = entry->text;
+        mString v15 { v1 };
+
+        int arg0;
+        auto* v13 = get_level_descriptors(&arg0);
+        for (auto i = 0; i < arg0; ++i) {
+            auto* v2 = v15.c_str();
+            fixedstring<16> v6 { v2 };
+            if (v13[i].field_60 == v6) {
+                auto* v3 = v13[i].field_0.to_string();
+                v15 = { v3 };
+                break;
+            }
+        }
+
+           g_game_ptr()->load_level(); // or "city_arena"
+    }
+
 
 
 void reboot_handler(debug_menu_entry *a1)
 {
+    reboot_process();
 }
 
 void handle_hero_select_menu(debug_menu_entry *entry, custom_key_type)
@@ -122,54 +176,36 @@ void hero_entry_callback(debug_menu_entry *);
 
 void hero_toggle_handler(debug_menu_entry *entry);
 
-void create_level_select_menu(debug_menu *level_select_menu)
+
+
+
+
+inline void create_level_select_menu(debug_menu* level_select_menu)
 {
-    //assert(debug_menu::root_menu != nullptr);
+    // assert(debug_menu::root_menu != nullptr);
 
-    int arg0;
-    auto *level_descriptors = get_level_descriptors(&arg0);
-    printf("num_descriptors = %d\n", arg0);
-    for ( auto i = 0; i < arg0; ++i )
-    {
-        auto v6 = 25;
-        auto *v1 = level_descriptors[i].field_0.to_string();
-        string_hash v5{v1};
-        auto v11 = resource_key{v5, v6};
-        auto v17 = resource_manager::get_pack_file_stats(v11, nullptr, nullptr, nullptr);
-        if ( v17 )
-        {
-            mString v22 {level_descriptors[i].field_60.to_string()};
-            debug_menu_entry v39 {v22.c_str()};
 
-            v39.set_game_flags_handler(level_select_handler);
-            v39.m_id = i;
-            level_select_menu->add_entry(&v39);
-        }
-    }
 
-    mString v25{"-- REBOOT --"};
-    debug_menu_entry v38 {v25.c_str()};
 
-    v38.set_game_flags_handler(reboot_handler);
-    
-    level_select_menu->add_entry(&v38);
+    static debug_menu* hero_select_menu = create_menu("Hero Select");
 
-    static debug_menu *hero_select_menu = create_menu("Hero Select");
+    debug_menu_entry v28 { hero_select_menu };
 
-    debug_menu_entry v28 {hero_select_menu};
+            debug_menu_entry v1;
+    debug_menu_entry* block = v1.alloc_block(hero_select_menu, 4);
+    block[0] = debug_menu_entry { hero_select_menu };
 
     level_select_menu->add_entry(&v28);
-    for ( auto i = 0u; i < NUM_HEROES; ++i )
-    {
-        auto v6 = 25;
-        string_hash v5{hero_list[i]};
-        auto v11 = resource_key{v5, v6};
-        auto v30 = resource_manager::get_pack_file_stats(v11, nullptr, nullptr, nullptr);
-        if ( v30 )
-        {
-            mString v35 {hero_list[i]};
+    for (auto i = 0u; i < NUM_HEROES; ++i) {
+        string_hash v5 { hero_list[i] };
+        const auto v19 = mString { hero_list[i] };
+        auto* v12 = v19.c_str();
+        auto key = create_resource_key_from_path(v12, 25);
 
-            debug_menu_entry v37 {v35.c_str()};
+        auto v30 = resource_manager::get_pack_file_stats(key, nullptr, nullptr, nullptr);
+        if (v30) {
+
+            debug_menu_entry v37 { v19.c_str() };
 
             v37.set_game_flags_handler(hero_toggle_handler);
             v37.m_id = i;
@@ -177,7 +213,30 @@ void create_level_select_menu(debug_menu *level_select_menu)
             hero_select_menu->add_entry(&v37);
         }
     }
-}
+
+
+            mString v23 { "city" };
+    debug_menu_entry v40 { v23.c_str() };
+
+    v40.set_game_flags_handler(city_handler);
+
+        level_select_menu->add_entry(&v40);
+
+        mString v24 { "characterb" };
+    debug_menu_entry v41 { v24.c_str() };
+
+    v41.set_game_flags_handler(characterb_handler);
+
+    level_select_menu->add_entry(&v41);
+
+    mString v25 { "-- REBOOT --" };
+    debug_menu_entry v38 { v25.c_str() };
+
+    v38.set_game_flags_handler(reboot_handler);
+
+    level_select_menu->add_entry(&v38);
+    }
+
 
 struct debug_menu_entry;
 
@@ -202,6 +261,7 @@ void hero_entry_callback(debug_menu_entry *)
         hero_status = hero_status_e::ADD_PLAYER;
         frames_to_skip = 2;
         g_game_ptr()->enable_marky_cam(true, true, -1000.0, 0.0);
+        g_game_ptr()->enable_physics(false);
         break;
     }
     case hero_status_e::ADD_PLAYER:
@@ -212,6 +272,7 @@ void hero_entry_callback(debug_menu_entry *)
             assert(hero_selected > -1 && hero_selected < NUM_HEROES);
 
             [[maybe_unused]] auto v2 = g_world_ptr()->add_player(mString {hero_list[hero_selected]});
+            g_game_ptr()->enable_physics(true);
             Sleep(1000);
 
             /*

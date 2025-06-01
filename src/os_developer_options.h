@@ -19,8 +19,9 @@ inline Var<BOOL[150]> flag_defaults{0x00936678};
 
 inline Var<const char *[150]> flag_names { 0x00936420 };
 
+inline Var<const char* [14]> string_names { 0x00936908 };
 
-inline Var<const char* [14]> string_names { 0x009368D0 };
+inline Var<const char* [1024]> g_scene_names { 0x0095C308 };
 
 struct os_developer_options
 {
@@ -47,6 +48,8 @@ struct os_developer_options
     int m_ints[76];
     mString field_2AC;
 
+
+
     std::optional<mString> get_string(strings_t a2)
     {
         if (a2 < strings_t::SOUND_LIST || a2 > strings_t::DEBUG_ENTITY_NAME) {
@@ -54,6 +57,18 @@ struct os_developer_options
         } else {
             auto a3 = this->m_strings[a2];
             return a3;
+        }
+    }
+
+            mString* get_hero_name(os_developer_options* a2) const
+    {
+        if constexpr (1) {
+            static mString result { "HERO" };
+
+            result = this->m_strings[2];
+            return &result;
+        } else {
+            return (mString*)CDECL_CALL(0x005C3150, this);
         }
     }
 
@@ -71,6 +86,8 @@ struct os_developer_options
     {
         this->m_flags[this->get_flag_from_name(a2)] = a3;
     }
+
+
 
     int get_int_from_name(const mString &a1) {
 
@@ -125,6 +142,10 @@ struct os_developer_options
         }
     }
 
+
+     static inline bool hero_select_list[17] {
+        1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+    };
     static inline Var<os_developer_options *> instance{0x0096858C};
 };
 
