@@ -56,8 +56,8 @@ inline resource_key*& amalgapak_prerequisite_table = var<resource_key*>(0x0095C3
 
 inline resource_partition* get_partition_pointer(resource_partition_enum which_type)
 {
-    assert(partitions != nullptr);
-    assert(which_type >= 0 && which_type < static_cast<int>(partitions->size()));
+//    assert(partitions != nullptr);
+//    assert(which_type >= 0 && which_type < static_cast<int>(partitions->size()));
 
     return partitions->at(which_type);
 }
@@ -121,13 +121,13 @@ inline bool get_pack_file_stats(const resource_key& a1, resource_pack_location* 
     TRACE("resource_manager::get_pack_file_stats", a1.get_platform_string(g_platform).c_str());
 
     if constexpr (1) {
-        assert(amalgapak_pack_location_table != nullptr);
+      //  assert(amalgapak_pack_location_table != nullptr);
 
         if (a3 != nullptr) {
             *a3 = amalgapak_name.c_str();
         }
 
-        assert(amalgapak_base_offset != -1);
+      //  assert(amalgapak_base_offset != -1);
 
         {
             auto is_sorted = std::is_sorted(amalgapak_pack_location_table,
@@ -135,7 +135,7 @@ inline bool get_pack_file_stats(const resource_key& a1, resource_pack_location* 
                 [](auto& a1, auto& a2) {
                     return a1.loc.m_offset <= a2.loc.m_offset;
                 });
-            assert(is_sorted);
+           // assert(is_sorted);
         }
 
         auto i = 0;

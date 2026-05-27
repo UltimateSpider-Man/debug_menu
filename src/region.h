@@ -3,10 +3,14 @@
 #include "common.h"
 #include "region_mash_info.h"
 
+
+
+
+
 struct region {
     char field_0[0x2C];
-    region_mash_info *mash_info;
-    void *region_entities;
+    region_mash_info* mash_info;
+    void* region_entities;
     int field_34;
     int field_38;
     int field_3C;
@@ -14,17 +18,22 @@ struct region {
     int field_44;
     int field_48;
     int field_4C;
-	int flags;
-	uint8_t unk1[0x50];
+    int flags;
+    uint8_t unk1[0x50];
     vector3d field_A4;
     float field_B0[3];
     float field_BC;
-	DWORD district_id;
-	uint8_t unk3[0x4];
-	uint8_t variants;
-	uint8_t unk4[0x6B];
+    DWORD district_id;
+    uint8_t unk3[0x4];
+    uint8_t variants;
+    uint8_t unk4[0x6B];
 
-    fixedstring32 &get_name() {
+    static inline Var<int> visit_key{ 0x0095C894 };
+
+    static inline int& visit_key2 = var<int>(0x0095C91C);
+
+
+    fixedstring32& get_name() {
         return this->mash_info->field_0;
     }
 
@@ -33,23 +42,30 @@ struct region {
         return this->flags & 1;
     }
 
+    bool is_loaded() const {
+        return (this->flags & 0x10) != 0;
+    }
+
+
     int get_district_variant_count() const
     {
-        return bit_cast<int *>(bit_cast<char *>(this) + 0xC8)[0];
+        return bit_cast<int*>(bit_cast<char*>(this) + 0xC8)[0];
     }
 
     int get_district_variant() {
-        int (__fastcall *func)(void *) = bit_cast<decltype(func)>(0x005503D0);
+        int(__fastcall * func)(void*) = bit_cast<decltype(func)>(0x005503D0);
         return func(this);
     }
 
-    int get_district_id() {
-        constexpr auto REGION_UNINITIALIZED_DISTRICT_ID = 0;
+    int get_district_id() const
+    {
+        static constexpr auto REGION_UNINITIALIZED_DISTRICT_ID = 0;
 
         assert(district_id != REGION_UNINITIALIZED_DISTRICT_ID && "dsg and sin probably out of sync");
 
         return this->district_id;
     }
+
 };
 
 VALIDATE_OFFSET(region, mash_info, 0x2C);

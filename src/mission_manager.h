@@ -62,6 +62,13 @@ struct mission_manager {
         return this->m_district_table_containers[a2];
     }
 
+    void sub_5BACA0(Float a2) {
+
+
+        void(__fastcall * func)(void*, void*, Float) = (decltype(func))0x005BACA0;
+        func(this, nullptr, a2);
+    }
+
     mission_table_container *get_global_table()
     {
         return this->m_global_table_container;

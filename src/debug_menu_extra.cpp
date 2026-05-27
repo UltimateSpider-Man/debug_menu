@@ -8,7 +8,7 @@
 #include "resource_manager.h"
 #include "spider_monkey.h"
 #include "conglom.h"
-
+#include "timer.h"
 #include "rtdt_replay_mgr.h"
 
 #include <cassert>
@@ -698,6 +698,24 @@ inline void ngl_handler(debug_menu_entry *a1)
     nglSetDebugFlag(v2, v3);
 }
 
+void slow_motion_handler(debug_menu_entry* a1)
+{
+    switch (a1->get_bval()) {
+    case 0u:
+        os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, false);
+        g_timer()->normal_motion();
+        debug_menu::hide();
+        break;
+    case 1u:
+        os_developer_options::instance()->set_int(mString{ "FRAME_LOCK" }, true);
+        g_timer()->slow_motion();
+        debug_menu::hide();
+        break;
+
+    }
+
+}
+
 void create_ngl_menu(debug_menu *parent)
 {
     assert(parent != nullptr);
@@ -1238,23 +1256,36 @@ void game_flags_handler(debug_menu_entry *a1)
     }
     case 14u:
     {
-        //TODO
-        //sub_66FBE0();
-        debug_menu::hide();
-        break;
+        if (auto* gp = g_game_ptr()) {
+            if (auto* gs = gp->gamefile) {
+                g_game_ptr()->get_game_settings();
+                gs->reset_container(0);
+                gs->save(0);
+                debug_menu::hide();
+                break;
+            }
+        }
     }
     case 15u:
     {
-        //sub_697DB1();
-        debug_menu::hide();
-        break;
+        if (auto* gp = g_game_ptr()) {
+            if (auto* gs = gp->gamefile) {
+                gs->load_game(0);
+                debug_menu::hide();
+                break;
+            }
+        }
     }
     case 16u:
     {
         //TODO
-        //sub_698D33();
-        debug_menu::hide();
-        break;
+        if (auto* gp = g_game_ptr()) {
+            if (auto* gs = gp->gamefile) {
+                gs->load_most_recent_game();
+                debug_menu::hide();
+                break;
+            }
+        }
     }
     case 17u:
     {

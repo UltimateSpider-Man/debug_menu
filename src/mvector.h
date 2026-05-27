@@ -7,6 +7,9 @@ struct mVector {
     T **m_data;
     int field_C;
     bool field_10;
+    auto size() const {
+        return m_size;
+    }
 
     struct iterator {
         T **_Ptr;
@@ -25,6 +28,7 @@ struct mVector {
         {
             ++this->_Ptr;
         }
+
 
         auto &operator*()
         {

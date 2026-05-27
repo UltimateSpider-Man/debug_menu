@@ -12,6 +12,8 @@
 
 #include <windows.h>
 
+debug_menu* debug_menu::active_menu = nullptr;
+
 const char *to_string(debug_menu_entry_type entry_type)
 {
     const char *strings[] = {
@@ -289,6 +291,13 @@ debug_menu_entry::debug_menu_entry(debug_menu *submenu) : entry_type(POINTER_MEN
 {
     m_value.p_menu = submenu;
     strncpy(this->text, submenu->title, MAX_CHARS_SAFE);
+}
+
+
+void debug_menu::show()
+{
+    active_menu = debug_menu::root_menu;
+
 }
 
 void* add_debug_menu_entry(debug_menu* menu, debug_menu_entry* entry)

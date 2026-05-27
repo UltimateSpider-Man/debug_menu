@@ -386,6 +386,7 @@ struct debug_menu_entry {
         this->render_callback = a2;
     }
 
+
     debug_menu_entry() = default;
 
     debug_menu_entry(const char *p_text) : entry_type(UNDEFINED)
@@ -437,6 +438,7 @@ struct debug_menu {
         this->add_entry(&entry);
     }
 
+    static void show();
 
 
     static void hide()
@@ -462,6 +464,8 @@ struct debug_menu {
     static inline bool physics_state_on_exit = true;
 
         static inline bool has_focus = false;
+
+       static debug_menu* active_menu;
 };
 
 extern void* add_debug_menu_entry(debug_menu* menu, debug_menu_entry* entry);
@@ -477,3 +481,5 @@ extern debug_menu_entry *create_menu_entry(debug_menu *menu);
 extern const char *to_string(custom_key_type key_type);
 
 extern void handle_game_entry(debug_menu_entry *entry, custom_key_type key_type);
+
+

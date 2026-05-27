@@ -23,6 +23,8 @@ inline Var<const char* [14]> string_names { 0x00936908 };
 
 inline Var<const char* [1024]> g_scene_names { 0x0095C308 };
 
+
+
 struct os_developer_options
 {
     enum strings_t {
@@ -42,6 +44,7 @@ struct os_developer_options
         DEBUG_ENTITY_NAME = 13,
     };
 
+    enum flags_t {};
     int m_vtbl;
     bool m_flags[150];
     mString m_strings[14];

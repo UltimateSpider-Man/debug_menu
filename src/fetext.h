@@ -8,6 +8,9 @@
 #include "os_developer_options.h"
 #include "trace.h"
 #include "vector2di.h"
+#include "utility.h"
+
+#include "vtbl.h"
 
 struct font_index
 {
@@ -23,6 +26,8 @@ struct panel_layer
 {
     int field_0;
 };
+
+inline int m_vtbl;
 
 struct FEText
 {
@@ -41,6 +46,10 @@ struct FEText
     mString field_50;
     int field_60;
     int8_t field_64;
+
+
+ int m_vtbl;
+
 
     FEText(font_index a2,
            global_text_enum a3,
@@ -65,6 +74,53 @@ struct FEText
 
         void (__fastcall *func)(void *) = bit_cast<decltype(func)>(0x00617640);
         func(this);
+    }
+
+    void SetShown(bool a2) {
+        void(__fastcall * func)(void*, void*, bool) = CAST(func, get_vfunc(m_vtbl, 0x64));
+
+        func(this, nullptr, a2);
+
+
+    }
+
+
+    void SetNoFlash(color32 a2) {
+        this->field_4C = a2;
+        this->field_64 = this->field_64 & 0xF7 | 1;
+    }
+
+    void SetText(global_text_enum a2) {
+        TRACE("FEText::Draw");
+
+        void(__fastcall * func)(void*, global_text_enum) = bit_cast<decltype(func)>(0x00617760);
+        func(this, a2);
+    }
+
+    float GetX() {
+        float(__fastcall * func)(void*) = CAST(func, get_vfunc(m_vtbl, 0xD4));
+
+        return func(this);
+    }
+
+    float GetY() {
+        float(__fastcall * func)(void*) = CAST(func, get_vfunc(m_vtbl, 0xD8));
+
+        return func(this);
+    }
+
+    void SetScale(Float a2, Float a3)
+    {
+        if constexpr (1)
+        {
+            float(__fastcall * func)(FEText*, void*, Float, Float) = CAST(func, get_vfunc(m_vtbl, 0x78));
+            func(this, nullptr, a2, a3);
+        }
+        else
+        {
+            this->field_3C = a2;
+            this->field_40 = a3;
+        }
     }
 };
 
@@ -91,5 +147,5 @@ inline void render_text(const mString &a1, const vector2di &a2, color32 a3, floa
 
         fe_text.Draw();
     }
-}
 
+}

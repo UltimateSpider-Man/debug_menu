@@ -216,6 +216,7 @@ struct nglQuad {
 
 VALIDATE_SIZE(nglQuad, 0x64);
 
+
 inline constexpr auto NGLP_SCALE = 0x2;
 
 inline constexpr auto NGLP_NO_CULLING = 0x40;

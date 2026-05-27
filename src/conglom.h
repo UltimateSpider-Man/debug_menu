@@ -15,6 +15,17 @@ struct als_res_data;
 struct light_manager;
 struct light_source;
 
+enum entity_flag_t {
+    EFLAG_GRAPHICS_VISIBLE = 0x200,
+    EFLAG_MISC_CAST_SHADOW = 0x40000,
+    EFLAG_MISC_HIRES_SHADOW = 0x8000000,
+};
+
+enum entity_ext_flag_t {
+    EFLAG_EXT_SIGNALLER_ONLY = 0x20000u,
+    EFLAG_EXT_DOES_NOT_MANAGE_ABS_PO = 0x40000000u,
+};
+
 namespace als {
 struct animation_logic_system;
 }

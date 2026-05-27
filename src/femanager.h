@@ -38,7 +38,10 @@ struct FEManager {
     void Draw();
 
     //0x00638180
-    PanelQuad *GetDefaultPQ();
+    PanelQuad* GetDefaultPQ() {
+        return (PanelQuad*)THISCALL(0x00638180, this);
+    }
+
 
     //0x00642B30
     void Update(Float a2);
