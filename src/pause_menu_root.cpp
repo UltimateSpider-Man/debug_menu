@@ -354,7 +354,7 @@ void pause_menu_root_patch() {
 
     {
         FUNC_ADDRESS(address, &pause_menu_root::OnCross);
-        set_vfunc(0x00893F84, address);
+     //   set_vfunc(0x00893F84, address);
     }
 
 
