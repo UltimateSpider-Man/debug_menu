@@ -10,4 +10,11 @@ struct po
     vector3d &get_z_facing() const {
         return *bit_cast<vector3d *>(&this->m[2]);
     }
+
+    inline auto& get_position() const {
+        constexpr auto idx = 3;
+
+        return *(const vector3d*)&this->m[idx];
+    }
+
 };

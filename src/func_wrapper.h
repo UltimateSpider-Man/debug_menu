@@ -2,10 +2,22 @@
 
 #include "bit.h"
 
-typedef int(__cdecl *cdecl_call)(...);
-typedef int(__stdcall *stdcall_call)(...);
-typedef int(__fastcall *fastcall_call)(...);
+typedef int(__cdecl* cdecl_call)(...);
+typedef int(__stdcall* stdcall_call)(...);
+typedef int(__fastcall* fastcall_call)(...);
 
+template<typename... Args>
+decltype(auto) THISCALL(int address, const void* obj, Args... args) {
+
+    if constexpr (sizeof...(Args) > 0)
+    {
+        return (bit_cast<fastcall_call>(address))(obj, 0, args...);
+    }
+    else
+    {
+        return (bit_cast<fastcall_call>(address))(obj);
+    }
+}
 
 template<typename... Args>
 decltype(auto) STDCALL(int address, Args... args) {

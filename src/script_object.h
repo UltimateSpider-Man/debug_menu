@@ -3,7 +3,9 @@
 #include "bit.h"
 #include "common.h"
 #include "string_hash.h"
-
+#include "utility.h"
+#include <assert.h>
+#include "script_instance.h"
 struct vm_executable;
 
 struct so_data_block {
